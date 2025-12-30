@@ -1,58 +1,49 @@
 using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.InputSystem;
 
-public class FPSCameraController : InputAxisControllerBase<FPSCameraController.Reader>
+public class FPSCameraController : SerializedMonoBehaviour
 {
-    [Header("Input Source Override")]
-    public PlayerInput playerInput;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+   CinemachineInputAxisController _input;   
+    
+    public float lookSpeed = 2.0f;
+
     private void Awake()
     {
-        if (playerInput == null)
-            TryGetComponent(out playerInput);
-        if (playerInput == null)
-            Debug.LogError("Cannot find PlayerInput component");
-        else
+        _input = GetComponent<CinemachineInputAxisController>();  //was found at: https://discussions.unity.com/t/how-can-i-change-the-legacy-gain-value-in-a-script-in-cinemachine-input-axis-controller/950807/5
+        foreach (var c in _input.Controllers)
         {
-            playerInput.notificationBehavior = PlayerNotifications.InvokeCSharpEvents;
-            playerInput.onActionTriggered += (value) =>
+            if (c.Name == "Look X (Pan)")
             {
-                for (var i = 0; i < Controllers.Count; i++)
-                    Controllers[i].Input.ProcessInput(value.action);
-            };
-        }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    [Serializable]
-    public class Reader : IInputAxisReader
-    {
-        public InputActionReference Input;
-        private Vector2 m_Value; // the cached value of the input
-
-        public void ProcessInput(InputAction action)
-        {
-            if (Input != null && Input.action.id == action.id)
-            {
-                // If it's my action then cache the new value
-                if (action.expectedControlType == "Vector2")
-                    m_Value = action.ReadValue<Vector2>();
-                else
-                    m_Value.x = m_Value.y = action.ReadValue<float>();
+                c.Input.Gain = lookSpeed;
             }
+            if (c.Name == "Look Y (Tilt)")
+            {
+                c.Input.Gain = lookSpeed;
+            }
+            
         }
+            
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
 
-        // IInputAxisReader interface: Called by the framework to read the input value
-        public float GetValue(UnityEngine.Object context, IInputAxisOwner.AxisDescriptor.Hints hint)
+    private void Update()
+    {
+          //was found at: https://discussions.unity.com/t/how-can-i-change-the-legacy-gain-value-in-a-script-in-cinemachine-input-axis-controller/950807/5
+        foreach (var c in _input.Controllers)
         {
-            return (hint == IInputAxisOwner.AxisDescriptor.Hints.Y ? m_Value.y : m_Value.x);
+            if (c.Name == "Look X (Pan)")
+            {
+                c.Input.Gain = lookSpeed;
+            }
+            if (c.Name == "Look Y (Tilt)")
+            {
+                c.Input.Gain = lookSpeed;
+            }
+            
         }
     }
 }
